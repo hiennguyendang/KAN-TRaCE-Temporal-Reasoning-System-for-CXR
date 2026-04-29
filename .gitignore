@@ -1,0 +1,33 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Local runtime outputs
+artifacts/manifests/*.csv
+artifacts/manifests/*.parquet
+artifacts/tmp/
+
+# Dataset roots (local drives)
+data/
+local_data/
+
+# IDE
+.vscode/settings.json
+
+# OS files
+.DS_Store
+Thumbs.db

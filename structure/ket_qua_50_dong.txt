@@ -1,0 +1,300 @@
+{
+    "50000014": [
+        [
+            [
+                "left lung|C0225730",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
+            [
+                "low lung volumes|C4049255",
+                "technicalassessment_annotation"
+            ],
+            [
+                "left lung|C0225730",
+                "location"
+            ],
+            "annotation_of"
+        ],
+        [
+            [
+                "right lung|C0225706",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
+            [
+                "low lung volumes|C4049255",
+                "technicalassessment_annotation"
+            ],
+            [
+                "right lung|C0225706",
+                "location"
+            ],
+            "annotation_of"
+        ],
+        [
+            [
+                "left costophrenic angle|CL380391;;C0504100",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
+            [
+                "abnormal|C0205161",
+                "nlp_annotation"
+            ],
+            [
+                "left costophrenic angle|CL380391;;C0504100",
+                "location"
+            ],
+            "annotation_of"
+        ],
+        [
+            [
+                "left costophrenic angle|CL380391;;C0504100",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
+            [
+                "lung opacity|CL556823",
+                "anatomicalfinding_annotation"
+            ],
+            [
+                "left costophrenic angle|CL380391;;C0504100",
+                "location"
+            ],
+            "annotation_of"
+        ],
+        [
+            [
+                "left costophrenic angle|CL380391;;C0504100",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
+            [
+                "pleural effusion|CL545973;;C0032227",
+                "anatomicalfinding_annotation"
+            ],
+            [
+                "left costophrenic angle|CL380391;;C0504100",
+                "location"
+            ],
+            "annotation_of"
+        ],
+        [
+            [
+                "left lower lung zone|C0934571",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
+            [
+                "pleural effusion|CL545973;;C0032227",
+                "anatomicalfinding_annotation"
+            ],
+            [
+                "left lower lung zone|C0934571",
+                "location"
+            ],
+            "annotation_of"
+        ],
+        [
+            [
+                "left lung|C0225730",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
+            [
+                "pleural effusion|CL545973;;C0032227",
+                "anatomicalfinding_annotation"
+            ],
+            [
+                "left lung|C0225730",
+                "location"
+            ],
+            "annotation_of"
+        ],
+        [
+            [
+                "left hilar structures|C1708367",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
+            [
+                "abnormal|C0205161",
+                "nlp_annotation"
+            ],
+            [
+                "left hilar structures|C1708367",
+                "location"
+            ],
+            "annotation_of"
+        ],
+        [
+            [
+                "left hilar structures|C1708367",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
+            [
+                "lung opacity|CL556823",
+                "anatomicalfinding_annotation"
+            ],
+            [
+                "left hilar structures|C1708367",
+                "location"
+            ],
+            "annotation_of"
+        ],
+        [
+            [
+                "left hilar structures|C1708367",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
+            [
+                "pulmonary edema/hazy opacity|CL542044;;C0034063",
+                "anatomicalfinding_annotation"
+            ],
+            [
+                "left hilar structures|C1708367",
+                "location"
+            ],
+            "annotation_of"
+        ],
+        [
+            [
+                "left lower lung zone|C0934571",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
+            [
+                "pulmonary edema/hazy opacity|CL542044;;C0034063",
+                "anatomicalfinding_annotation"
+            ],
+            [
+                "left lower lung zone|C0934571",
+                "location"
+            ],
+            "annotation_of"
+        ],
+        [
+            [
+                "left lung|C0225730",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
+            [
+                "pulmonary edema/hazy opacity|CL542044;;C0034063",
+                "anatomicalfinding_annotation"
+            ],
+            [
+                "left lung|C0225730",
+                "location"
+            ],
+            "annotation_of"
+        ],
+        [
+            [
+                "right hilar structures|C1708369",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
+            [
+                "abnormal|C0205161",
+                "nlp_annotation"
+            ],
+            [
+                "right hilar structures|C1708369",
+                "location"
+            ],
+            "annotation_of"
+        ],
+        [
+            [
+                "right hilar structures|C1708369",
+                "location"
+            ],
+            [
+                "50000014",
+                "study_id"
+            ],
+            "location_of"
+        ],
+        [
