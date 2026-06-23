@@ -21,7 +21,7 @@ from typing import Any
 
 import pandas as pd
 
-from preprocess.metadata.chexplus_metadata import extract_image_triplet
+from preprocess.metadata_generator.chexplus_metadata import extract_image_triplet
 
 
 LOGGER = logging.getLogger("chexplus_scene_graph")
