@@ -10,9 +10,9 @@ from pathlib import Path
 from tqdm import tqdm
 
 try:
-    from preprocess.config import PipelineConfig, default_config
-    from preprocess.mimic_dataset import MimicImageRecord, MimicScanStats, scan_mimic_images
-    from preprocess.utils import (
+    from preprocess.download.config import PipelineConfig, default_config
+    from preprocess.download.mimic_dataset import MimicImageRecord, MimicScanStats, scan_mimic_images
+    from preprocess.download.utils import (
         build_metadata_entry,
         ensure_directories,
         load_metadata,
@@ -23,9 +23,9 @@ try:
         setup_logger,
     )
 except ModuleNotFoundError:
-    from config import PipelineConfig, default_config
-    from mimic_dataset import MimicImageRecord, MimicScanStats, scan_mimic_images
-    from utils import (
+    from preprocess.download.config import PipelineConfig, default_config
+    from preprocess.download.mimic_dataset import MimicImageRecord, MimicScanStats, scan_mimic_images
+    from preprocess.download.utils import (
         build_metadata_entry,
         ensure_directories,
         load_metadata,

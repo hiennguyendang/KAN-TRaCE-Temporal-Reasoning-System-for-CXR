@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 try:
-    from preprocess.config import PipelineConfig
+    from preprocess.download.config import PipelineConfig
 except ModuleNotFoundError:
-    from config import PipelineConfig
+    from preprocess.download.config import PipelineConfig
 
 SUPPORTED_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg"}
 ALLOWED_VIEWS = {"AP", "PA"}

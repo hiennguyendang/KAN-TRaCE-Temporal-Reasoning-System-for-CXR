@@ -14,9 +14,9 @@ from typing import Any
 
 # Import our custom wrapper
 try:
-    from structure.model_wrapper import BioViLWrapper
+    from preprocess.structure.model_wrapper import BioViLWrapper
 except ModuleNotFoundError:
-    from model_wrapper import BioViLWrapper
+    from preprocess.structure.model_wrapper import BioViLWrapper
 
 # Ignore index value for BCE loss
 IGNORE_INDEX = -100.0

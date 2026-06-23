@@ -6,9 +6,9 @@ import time
 from pathlib import Path
 
 try:
-    from preprocess.config import PipelineConfig
+    from preprocess.download.config import PipelineConfig
 except ModuleNotFoundError:
-    from config import PipelineConfig
+    from preprocess.download.config import PipelineConfig
 
 
 def run_rclone_copy(pack_name: str, config: PipelineConfig, logger) -> tuple[Path, float, float | None]:

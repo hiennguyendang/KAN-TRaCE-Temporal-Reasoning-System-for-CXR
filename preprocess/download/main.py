@@ -8,10 +8,10 @@ from pathlib import Path
 from tqdm import tqdm
 
 try:
-    from preprocess.config import PipelineConfig, default_config
-    from preprocess.dataset import scan_pack_images
-    from preprocess.rclone_utils import remove_local_pack, run_rclone_copy
-    from preprocess.utils import (
+    from preprocess.download.config import PipelineConfig, default_config
+    from preprocess.download.dataset import scan_pack_images
+    from preprocess.download.rclone_utils import remove_local_pack, run_rclone_copy
+    from preprocess.download.utils import (
         build_metadata_entry,
         ensure_directories,
         load_metadata,
@@ -22,10 +22,10 @@ try:
         setup_logger,
     )
 except ModuleNotFoundError:
-    from config import PipelineConfig, default_config
-    from dataset import scan_pack_images
-    from rclone_utils import remove_local_pack, run_rclone_copy
-    from utils import (
+    from preprocess.download.config import PipelineConfig, default_config
+    from preprocess.download.dataset import scan_pack_images
+    from preprocess.download.rclone_utils import remove_local_pack, run_rclone_copy
+    from preprocess.download.utils import (
         build_metadata_entry,
         ensure_directories,
         load_metadata,
