@@ -31,3 +31,9 @@ local_data/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Heavy metadata & model weights
+metadata/*.jsonl
+metadata/*.csv
+*.pt
+
