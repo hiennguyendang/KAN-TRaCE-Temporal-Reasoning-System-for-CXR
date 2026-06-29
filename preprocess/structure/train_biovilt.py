@@ -1,10 +1,17 @@
-from __future__ import annotations
-
 import argparse
 import json
 import os
+import sys
 from pathlib import Path
+
+# Add project root to sys.path to resolve imports regardless of execution directory
+_FILE = Path(__file__).resolve()
+_PROJECT_ROOT = _FILE.parents[2]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
 from typing import Any
+
 
 import torch
 import torch.nn as nn
@@ -12,17 +19,20 @@ import torch.optim as optim
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 import torchvision.transforms as transforms
-
 from tqdm import tqdm
 
 # Import custom wrapper
 try:
     from preprocess.structure.model_wrapper import BioViLWrapper
 except ModuleNotFoundError:
-    from preprocess.structure.model_wrapper import BioViLWrapper
+    try:
+        from model_wrapper import BioViLWrapper
+    except ModuleNotFoundError:
+        from .model_wrapper import BioViLWrapper
 
 # Ignore index value for BCE loss
 IGNORE_INDEX = -100.0
+
 
 
 class CXRDataset(Dataset):
