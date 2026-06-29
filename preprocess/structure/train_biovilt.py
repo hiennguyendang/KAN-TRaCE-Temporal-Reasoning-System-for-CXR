@@ -64,24 +64,39 @@ class CXRDataset(Dataset):
 
 
         # 2. Fallback to metadata JSONL if split_file records are empty or missing
-        if not self.records and metadata_file and Path(metadata_file).exists():
-            import hashlib
-            print(f"[INFO] Loading records directly from metadata file: {metadata_file} for split: {split_name}")
-            with Path(metadata_file).open("r", encoding="utf-8") as f:
-                for line in f:
-                    rec = json.loads(line.strip())
-                    if split_name == "all":
-                        self.records.append(rec)
-                    elif "split" in rec and rec["split"] is not None:
-                        if rec["split"] == split_name:
+        if not self.records and metadata_file:
+            meta_path = Path(metadata_file)
+            if not meta_path.exists():
+                kaggle_input = Path("/kaggle/input")
+                if kaggle_input.exists():
+                    found = [p for p in kaggle_input.rglob("*.jsonl") if "metadata" in p.name.lower()]
+                    if not found:
+                        found = list(kaggle_input.rglob("*.jsonl"))
+                    if found:
+                        meta_path = found[0]
+                        print(f"[INFO] Auto-located metadata file on Kaggle: {meta_path}")
+
+            if meta_path.exists():
+                import hashlib
+                print(f"[INFO] Loading records directly from metadata file: {meta_path} for split: {split_name}")
+                with meta_path.open("r", encoding="utf-8") as f:
+                    for line in f:
+                        rec = json.loads(line.strip())
+                        if split_name == "all":
                             self.records.append(rec)
-                    else:
-                        # Deterministic patient-disjoint split: 90% train, 10% val
-                        pid = str(rec.get("patient_id", rec.get("subject_id", rec.get("image_id", ""))))
-                        h_val = int(hashlib.md5(pid.encode()).hexdigest(), 16) % 10
-                        rec_split = "val" if h_val == 9 else "train"
-                        if rec_split == split_name:
-                            self.records.append(rec)
+                        elif "split" in rec and rec["split"] is not None:
+                            if rec["split"] == split_name:
+                                self.records.append(rec)
+                        else:
+                            # Deterministic patient-disjoint split: 90% train, 10% val
+                            pid = str(rec.get("patient_id", rec.get("subject_id", rec.get("image_id", ""))))
+                            h_val = int(hashlib.md5(pid.encode()).hexdigest(), 16) % 10
+                            rec_split = "val" if h_val == 9 else "train"
+                            if rec_split == split_name:
+                                self.records.append(rec)
+            else:
+                print(f"[ERROR] Metadata file not found at: {metadata_file}")
+
 
 
         if not self.records:
