@@ -53,11 +53,12 @@ class CXRDataset(Dataset):
         self.images_root = Path(images_root) if images_root else None
         self.records = []
 
-        # 1. Try loading from split JSON
-        if split_file and Path(split_file).exists():
+        # 1. Try loading from split JSON (skip if split_file is 'none' or None)
+        if split_file and str(split_file).lower() != "none" and Path(split_file).exists():
             with Path(split_file).open("r", encoding="utf-8") as f:
                 data = json.load(f)
                 self.records = data.get(split_name, [])
+
 
         # 2. Fallback to metadata JSONL if split_file records are empty or missing
         if not self.records and metadata_file and Path(metadata_file).exists():
