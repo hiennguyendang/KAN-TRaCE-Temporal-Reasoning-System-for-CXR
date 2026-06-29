@@ -57,7 +57,10 @@ class CXRDataset(Dataset):
         if split_file and str(split_file).lower() != "none" and Path(split_file).exists():
             with Path(split_file).open("r", encoding="utf-8") as f:
                 data = json.load(f)
-                self.records = data.get(split_name, [])
+                if split_name == "all":
+                    self.records = data.get("train", []) + data.get("val", []) + data.get("test", [])
+                else:
+                    self.records = data.get(split_name, [])
 
 
         # 2. Fallback to metadata JSONL if split_file records are empty or missing
@@ -66,7 +69,7 @@ class CXRDataset(Dataset):
             with Path(metadata_file).open("r", encoding="utf-8") as f:
                 for line in f:
                     rec = json.loads(line.strip())
-                    if rec.get("split", "train") == split_name or split_name == "all":
+                    if split_name == "all" or rec.get("split", "train") == split_name:
                         self.records.append(rec)
 
         if not self.records:
