@@ -13,6 +13,8 @@ from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 import torchvision.transforms as transforms
 
+from tqdm import tqdm
+
 # Import custom wrapper
 try:
     from preprocess.structure.model_wrapper import BioViLWrapper
@@ -215,11 +217,13 @@ def train_one_epoch(
     model: nn.Module,
     dataloader: DataLoader,
     optimizer: optim.Optimizer,
-    device: torch.device
+    device: torch.device,
+    epoch_idx: int = 0
 ) -> float:
     model.train()
     total_loss = 0.0
-    for imgs, labels, _ in dataloader:
+    pbar = tqdm(dataloader, desc=f"Train Epoch {epoch_idx+1}", leave=False)
+    for imgs, labels, _ in pbar:
         imgs, labels = imgs.to(device), labels.to(device)
         optimizer.zero_grad()
         logits, _, _ = model(imgs)
@@ -227,6 +231,7 @@ def train_one_epoch(
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
+        pbar.set_postfix(loss=f"{loss.item():.4f}")
     return total_loss / max(len(dataloader), 1)
 
 
@@ -234,11 +239,13 @@ def evaluate(model: nn.Module, dataloader: DataLoader, device: torch.device) -> 
     model.eval()
     total_loss = 0.0
     with torch.no_grad():
-        for imgs, labels, _ in dataloader:
+        pbar = tqdm(dataloader, desc="Evaluating", leave=False)
+        for imgs, labels, _ in pbar:
             imgs, labels = imgs.to(device), labels.to(device)
             logits, _, _ = model(imgs)
             loss = compute_masked_loss(logits, labels)
             total_loss += loss.item()
+            pbar.set_postfix(loss=f"{loss.item():.4f}")
     return total_loss / max(len(dataloader), 1)
 
 
@@ -261,7 +268,8 @@ def extract_and_cache_features(
     print(f"\n[INFO] Extracting & caching BioViL-T features (with CLS token) to: {output_dir}")
 
     count = 0
-    for imgs, _, dicom_ids in dataloader:
+    pbar = tqdm(dataloader, desc="Caching Features", leave=True)
+    for imgs, _, dicom_ids in pbar:
         imgs = imgs.to(device)
         _, patch_features, cls_tokens = model(imgs)
         # patch_features: [B, 196, 512], cls_tokens: [B, 512]
@@ -277,8 +285,10 @@ def extract_and_cache_features(
             out_path = output_dir / f"{did}.pt"
             torch.save(combined_feat, out_path)
             count += 1
+        pbar.set_postfix(saved=count)
 
     print(f"[SUCCESS] Cached features for {count} studies to {output_dir}")
+
 
 
 def main() -> None:
@@ -342,9 +352,10 @@ def main() -> None:
     if len(train_dataset) > 0 and args.epochs > 0:
         print("\nStarting training loop...")
         for epoch in range(args.epochs):
-            train_loss = train_one_epoch(model, train_loader, optimizer, device)
+            train_loss = train_one_epoch(model, train_loader, optimizer, device, epoch_idx=epoch)
             val_loss = evaluate(model, val_loader, device)
             print(f"Epoch {epoch+1:02d}/{args.epochs:02d} | Train Loss = {train_loss:.4f} | Val Loss = {val_loss:.4f}")
+
 
     if args.extract_features:
         full_dataset = CXRDataset(args.split_file, "all", transform=transform,
