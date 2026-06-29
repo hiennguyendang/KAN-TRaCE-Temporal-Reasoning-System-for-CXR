@@ -14,7 +14,7 @@ class BioViLWrapper(nn.Module):
     
     If local pre-trained weights are not found, falls back to standard ResNet-50 weights.
     """
-    def __init__(self, pretrained_weights_path: str | None = None, pretrained_imagenet: bool = False) -> None:
+    def __init__(self, pretrained_weights_path: str | None = None, pretrained_imagenet: bool = True) -> None:
         super().__init__()
         
         # Load backbone ResNet-50
@@ -23,14 +23,15 @@ class BioViLWrapper(nn.Module):
             self.backbone = resnet50(weights=None)
         elif pretrained_imagenet:
             try:
-                print("[INFO] Initializing with ImageNet pretrained ResNet-50...")
+                print("[INFO] Initializing visual backbone with ImageNet Pretrained ResNet-50 weights...")
                 self.backbone = resnet50(weights=ResNet50_Weights.DEFAULT)
             except Exception as e:
                 print(f"[WARNING] Failed to load ImageNet pretrained weights: {e}. Falling back to randomly initialized ResNet-50.")
                 self.backbone = resnet50(weights=None)
         else:
-            print("[INFO] Initializing with randomly initialized ResNet-50 (no weight download).")
+            print("[INFO] Initializing with randomly initialized ResNet-50.")
             self.backbone = resnet50(weights=None)
+
 
         # 1x1 Convolution projector to map 2048 feature channels to 512 channels (patch features)
         self.patch_projector = nn.Conv2d(2048, 512, kernel_size=1)

@@ -196,12 +196,13 @@ class BioViLClassifier(nn.Module):
     Classifier wrapping BioViLWrapper and adding a multi-label classification head.
     Preserves both patch_features [196, 512] and global CLS token [512].
     """
-    def __init__(self, num_classes: int = 21, training_mode: str = "linear_probe") -> None:
+    def __init__(self, num_classes: int = 21, training_mode: str = "linear_probe", pretrained_weights_path: str | None = None) -> None:
         super().__init__()
-        self.image_encoder = BioViLWrapper()
+        self.image_encoder = BioViLWrapper(pretrained_weights_path=pretrained_weights_path, pretrained_imagenet=True)
         self.classifier = nn.Linear(128, num_classes)
         self.training_mode = training_mode
         self._configure_gradients()
+
 
     def _configure_gradients(self) -> None:
         for param in self.parameters():
