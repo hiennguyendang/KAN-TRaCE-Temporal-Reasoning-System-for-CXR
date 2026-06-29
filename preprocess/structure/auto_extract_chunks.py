@@ -12,15 +12,27 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
+
+# Add project root to sys.path to resolve imports regardless of execution directory
+_FILE = Path(__file__).resolve()
+_PROJECT_ROOT = _FILE.parents[2]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
 
 import torch
 from torch.utils.data import DataLoader, Subset
 from torchvision import transforms
 from tqdm import tqdm
 
-from preprocess.structure.model_wrapper import BioViLWrapper
-from preprocess.structure.train_biovilt import BioViLClassifier, CXRDataset, extract_and_cache_features
+try:
+    from preprocess.structure.model_wrapper import BioViLWrapper
+    from preprocess.structure.train_biovilt import BioViLClassifier, CXRDataset, extract_and_cache_features
+except ModuleNotFoundError:
+    from model_wrapper import BioViLWrapper
+    from train_biovilt import BioViLClassifier, CXRDataset, extract_and_cache_features
+
 
 
 def upload_chunk_dataset(chunk_dir: Path, part_idx: int, username: str) -> bool:
