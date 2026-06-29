@@ -85,7 +85,7 @@ def upload_chunk_dataset(chunk_dir: Path, part_idx: int, username: str) -> bool:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Auto Chunked Feature Extraction & Upload")
-    parser.add_argument("--split-file", type=Path, default=Path("./selected_patient_splits.json"))
+    parser.add_argument("--split-file", type=Path, default=Path("none"), help="Set to 'none' to load full metadata")
     parser.add_argument("--metadata-file", type=Path,
                         default=Path("/kaggle/input/datasets/nguynnghin/mimic-metadata/mimic_metadata_final.jsonl")
                         if Path("/kaggle/input").exists() else Path("./metadata/mimic_metadata_final.jsonl"))
