@@ -309,24 +309,40 @@ def extract_and_cache_features(
     print(f"\n[INFO] Extracting & caching BioViL-T features (with CLS token) to: {output_dir}")
 
     count = 0
+    skipped = 0
     pbar = tqdm(dataloader, desc="Caching Features", leave=True)
     for imgs, _, dicom_ids in pbar:
+        # Check if all files in batch already exist to skip GPU pass
+        batch_needed = False
+        for did in dicom_ids:
+            if not (output_dir / f"{did}.pt").exists():
+                batch_needed = True
+                break
+
+        if not batch_needed:
+            skipped += len(dicom_ids)
+            pbar.set_postfix(saved=count, skipped=skipped)
+            continue
+
         imgs = imgs.to(device)
         _, patch_features, cls_tokens = model(imgs)
-        # patch_features: [B, 196, 512], cls_tokens: [B, 512]
 
         B = imgs.size(0)
         for b in range(B):
             did = dicom_ids[b]
+            out_path = output_dir / f"{did}.pt"
+            if out_path.exists():
+                skipped += 1
+                continue
+
             cls_t = cls_tokens[b].unsqueeze(0)  # [1, 512]
             patches = patch_features[b]         # [196, 512]
-            # Concatenate CLS token as token 0 → [197, 512]
             combined_feat = torch.cat([cls_t, patches], dim=0).half().cpu()
 
-            out_path = output_dir / f"{did}.pt"
             torch.save(combined_feat, out_path)
             count += 1
-        pbar.set_postfix(saved=count)
+        pbar.set_postfix(saved=count, skipped=skipped)
+
 
     print(f"[SUCCESS] Cached features for {count} studies to {output_dir}")
 
