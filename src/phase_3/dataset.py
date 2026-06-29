@@ -109,9 +109,13 @@ class CachedFeatureDataset(Dataset):
             feats = torch.load(feat_path, map_location="cpu", weights_only=True)
             if feats.dtype == torch.float16:
                 feats = feats.float()
+            if feats.dim() == 2 and feats.size(0) == 197:
+                # Token 0 is CLS token; tokens 1..196 are spatial patch features
+                feats = feats[1:, :]
         else:
             # Return zeros if feature not cached (should not happen in practice)
             feats = torch.zeros(NUM_PATCHES, ENCODER_DIM)
+
 
         # --- Boxes ---
         bbox_path = self.bbox_dir / f"{dicom_id}.txt"

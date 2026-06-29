@@ -38,6 +38,9 @@ class BioViLWrapper(nn.Module):
         # Global linear projection to map pooled 2048 features to 128 (joint multimodal space)
         self.global_projector = nn.Linear(2048, 128)
         
+        # CLS Token linear projection to map pooled 2048 features to 512 (global visual token)
+        self.cls_projector = nn.Linear(2048, 512)
+        
         if pretrained_weights_path and os.path.exists(pretrained_weights_path):
             self._load_custom_state_dict(pretrained_weights_path)
 
@@ -45,7 +48,6 @@ class BioViLWrapper(nn.Module):
         try:
             state_dict = torch.load(path, map_location="cpu")
             # Map keys if needed (health_multimodal names might be prefixed)
-            # e.g., 'encoder.backbone.layer4.0.conv1.weight' -> 'backbone.layer4.0.conv1.weight'
             mapped_state_dict = {}
             for k, v in state_dict.items():
                 new_k = k
@@ -54,8 +56,6 @@ class BioViLWrapper(nn.Module):
                 elif k.startswith("encoder."):
                     new_k = k.replace("encoder.", "backbone.")
                 elif k.startswith("projector."):
-                    # Map to self.patch_projector or self.global_projector
-                    # If it is 1x1 conv projector
                     if "model.0" in k:
                         new_k = k.replace("projector.model.0", "patch_projector")
                 mapped_state_dict[new_k] = v
@@ -65,7 +65,7 @@ class BioViLWrapper(nn.Module):
         except Exception as e:
             print(f"[WARNING] Failed to load custom weights state dict: {e}. Falling back to initialized weights.")
 
-    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Forward pass.
         Input:
@@ -73,6 +73,7 @@ class BioViLWrapper(nn.Module):
         Returns:
             patch_embeddings: (batch_size, 196, 512) spatial visual features.
             global_embedding: (batch_size, 128) l2-normalized joint-space embedding.
+            cls_token: (batch_size, 512) global visual CLS feature vector.
         """
         # ResNet-50 visual feature extraction up to layer4
         x = self.backbone.conv1(x)
@@ -96,15 +97,18 @@ class BioViLWrapper(nn.Module):
         batch_size = x.shape[0]
         patch_embeddings = pooled_patches.view(batch_size, 512, 196).transpose(1, 2)
         
-        # 2. Global Visual Embedding
+        # 2. Global Visual Embedding & CLS Token
         # Average pool across spatial dimensions: (batch_size, 2048, H_out, W_out) -> (batch_size, 2048, 1, 1)
         global_pooled = F.adaptive_avg_pool2d(x, (1, 1)).view(batch_size, -1)  # Shape: (batch_size, 2048)
         
         # Project and normalize: (batch_size, 2048) -> (batch_size, 128)
         global_embedding = self.global_projector(global_pooled)
         global_embedding = F.normalize(global_embedding, p=2, dim=1)
+
+        # 512-dim global CLS token feature
+        cls_token = self.cls_projector(global_pooled)  # Shape: (batch_size, 512)
         
-        return patch_embeddings, global_embedding
+        return patch_embeddings, global_embedding, cls_token
 
 
 if __name__ == "__main__":
@@ -112,11 +116,14 @@ if __name__ == "__main__":
     print("Testing BioViLWrapper shape correctness...")
     model = BioViLWrapper()
     dummy_input = torch.randn(2, 3, 512, 512)
-    patches, global_emb = model(dummy_input)
+    patches, global_emb, cls_tok = model(dummy_input)
     print("Input shape: ", dummy_input.shape)
     print("Patch embeddings shape: ", patches.shape, " (Expected: [2, 196, 512])")
     print("Global embedding shape: ", global_emb.shape, " (Expected: [2, 128])")
+    print("CLS token shape: ", cls_tok.shape, " (Expected: [2, 512])")
     
     assert patches.shape == (2, 196, 512), "Incorrect patch embeddings shape!"
     assert global_emb.shape == (2, 128), "Incorrect global embedding shape!"
+    assert cls_tok.shape == (2, 512), "Incorrect CLS token shape!"
     print("[SUCCESS] Test passed!")
+
