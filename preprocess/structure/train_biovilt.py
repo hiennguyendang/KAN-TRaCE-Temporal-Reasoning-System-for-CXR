@@ -65,12 +65,24 @@ class CXRDataset(Dataset):
 
         # 2. Fallback to metadata JSONL if split_file records are empty or missing
         if not self.records and metadata_file and Path(metadata_file).exists():
+            import hashlib
             print(f"[INFO] Loading records directly from metadata file: {metadata_file} for split: {split_name}")
             with Path(metadata_file).open("r", encoding="utf-8") as f:
                 for line in f:
                     rec = json.loads(line.strip())
-                    if split_name == "all" or rec.get("split", "train") == split_name:
+                    if split_name == "all":
                         self.records.append(rec)
+                    elif "split" in rec and rec["split"] is not None:
+                        if rec["split"] == split_name:
+                            self.records.append(rec)
+                    else:
+                        # Deterministic patient-disjoint split: 90% train, 10% val
+                        pid = str(rec.get("patient_id", rec.get("subject_id", rec.get("image_id", ""))))
+                        h_val = int(hashlib.md5(pid.encode()).hexdigest(), 16) % 10
+                        rec_split = "val" if h_val == 9 else "train"
+                        if rec_split == split_name:
+                            self.records.append(rec)
+
 
         if not self.records:
             print(f"[WARNING] No records found for split '{split_name}'. Running dataset in empty mode.")
