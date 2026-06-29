@@ -372,6 +372,10 @@ def main() -> None:
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--extract-features", action="store_true",
                         help="Extract & save [197, 512] feature cache after training")
+    parser.add_argument("--checkpoint-path", type=Path,
+                        default=Path("/kaggle/working/biovilt_model.pt")
+                        if Path("/kaggle/input").exists() else Path("./biovilt_model.pt"),
+                        help="Path to save/load trained model checkpoint")
     args = parser.parse_args()
 
     device = torch.device(args.device)
@@ -400,6 +404,16 @@ def main() -> None:
     print(f"Initializing BioViLClassifier in mode: {args.mode}")
     model = BioViLClassifier(num_classes=21, training_mode=args.mode).to(device)
 
+    # Load checkpoint if exists
+    if args.checkpoint_path and Path(args.checkpoint_path).exists():
+        print(f"[INFO] Loading trained model weights from checkpoint: {args.checkpoint_path}")
+        try:
+            ckpt = torch.load(args.checkpoint_path, map_location=device)
+            model.load_state_dict(ckpt, strict=False)
+            print("[SUCCESS] Checkpoint weights loaded successfully.")
+        except Exception as e:
+            print(f"[WARNING] Failed to load checkpoint: {e}")
+
     total_params = sum(p.numel() for p in model.parameters())
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Model parameters: Total = {total_params:,} | Trainable = {trainable_params:,} ({trainable_params/total_params:.2%})")
@@ -413,6 +427,11 @@ def main() -> None:
             val_loss = evaluate(model, val_loader, device)
             print(f"Epoch {epoch+1:02d}/{args.epochs:02d} | Train Loss = {train_loss:.4f} | Val Loss = {val_loss:.4f}")
 
+        # Save trained model checkpoint
+        if args.checkpoint_path:
+            args.checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+            torch.save(model.state_dict(), args.checkpoint_path)
+            print(f"[SUCCESS] Saved trained model checkpoint to: {args.checkpoint_path}")
 
     if args.extract_features:
         full_dataset = CXRDataset(args.split_file, "all", transform=transform,
@@ -425,3 +444,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
