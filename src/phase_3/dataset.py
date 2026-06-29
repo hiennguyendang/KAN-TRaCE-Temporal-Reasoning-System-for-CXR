@@ -89,11 +89,21 @@ class CachedFeatureDataset(Dataset):
     def __init__(
         self,
         metadata_records: list[dict[str, Any]],
-        feature_cache_dir: Path,
+        feature_cache_dir: Path | list[Path] | str,
         bbox_dir: Path,
     ):
         self.records = metadata_records
-        self.feature_dir = Path(feature_cache_dir)
+        if isinstance(feature_cache_dir, (list, tuple)):
+            self.feature_dirs = [Path(p) for p in feature_cache_dir]
+        else:
+            self.feature_dirs = [Path(feature_cache_dir)]
+            
+        # Also auto-discover any biovilt-features datasets in /kaggle/input if on Kaggle
+        if Path("/kaggle/input").exists():
+            for p in Path("/kaggle/input").rglob("*biovilt*"):
+                if p.is_dir() and p not in self.feature_dirs:
+                    self.feature_dirs.append(p)
+                    
         self.bbox_dir = Path(bbox_dir)
 
     def __len__(self) -> int:
@@ -104,8 +114,14 @@ class CachedFeatureDataset(Dataset):
         dicom_id = rec["dicom_id"]
 
         # --- Features ---
-        feat_path = self.feature_dir / f"{dicom_id}.pt"
-        if feat_path.exists():
+        feat_path = None
+        for fdir in self.feature_dirs:
+            candidate = fdir / f"{dicom_id}.pt"
+            if candidate.exists():
+                feat_path = candidate
+                break
+
+        if feat_path and feat_path.exists():
             feats = torch.load(feat_path, map_location="cpu", weights_only=True)
             if feats.dtype == torch.float16:
                 feats = feats.float()
@@ -115,6 +131,7 @@ class CachedFeatureDataset(Dataset):
         else:
             # Return zeros if feature not cached (should not happen in practice)
             feats = torch.zeros(NUM_PATCHES, ENCODER_DIM)
+
 
 
         # --- Boxes ---
