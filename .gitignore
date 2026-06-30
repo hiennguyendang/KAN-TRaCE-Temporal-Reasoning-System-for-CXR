@@ -37,3 +37,5 @@ metadata/*.jsonl
 metadata/*.csv
 *.pt
 
+*/*/_work
+*/*/runs
