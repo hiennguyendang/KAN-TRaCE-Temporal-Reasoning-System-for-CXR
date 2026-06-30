@@ -306,44 +306,90 @@ def extract_and_cache_features(
     """
     model.eval()
     output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    print(f"\n[INFO] Extracting & caching BioViL-T features (with CLS token) to: {output_dir}")
+    
+    is_zip = output_dir.suffix == ".zip"
+    if is_zip:
+        output_dir.parent.mkdir(parents=True, exist_ok=True)
+        import zipfile
+        import io
+        print(f"\n[INFO] Extracting & caching BioViL-T features to ZIP file: {output_dir}")
+        
+        # Build set of existing names in zip if file already exists
+        existing = set()
+        if output_dir.exists():
+            try:
+                with zipfile.ZipFile(output_dir, "r") as zf:
+                    existing = set(zf.namelist())
+            except Exception:
+                pass
+    else:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        print(f"\n[INFO] Extracting & caching BioViL-T features (with CLS token) to: {output_dir}")
 
     count = 0
     skipped = 0
     pbar = tqdm(dataloader, desc="Caching Features", leave=True)
-    for imgs, _, dicom_ids in pbar:
-        # Check if all files in batch already exist to skip GPU pass
-        batch_needed = False
-        for did in dicom_ids:
-            if not (output_dir / f"{did}.pt").exists():
-                batch_needed = True
-                break
+    
+    zf = None
+    if is_zip:
+        zf = zipfile.ZipFile(output_dir, "a", compression=zipfile.ZIP_STORED)
 
-        if not batch_needed:
-            skipped += len(dicom_ids)
-            pbar.set_postfix(saved=count, skipped=skipped)
-            continue
+    try:
+        for imgs, _, dicom_ids in pbar:
+            # Check if all files in batch already exist to skip GPU pass
+            batch_needed = False
+            for did in dicom_ids:
+                if is_zip:
+                    if f"{did}.pt" not in existing:
+                        batch_needed = True
+                        break
+                else:
+                    if not (output_dir / f"{did}.pt").exists():
+                        batch_needed = True
+                        break
 
-        imgs = imgs.to(device)
-        _, patch_features, cls_tokens = model(imgs)
-
-        B = imgs.size(0)
-        for b in range(B):
-            did = dicom_ids[b]
-            out_path = output_dir / f"{did}.pt"
-            if out_path.exists():
-                skipped += 1
+            if not batch_needed:
+                skipped += len(dicom_ids)
+                pbar.set_postfix(saved=count, skipped=skipped)
                 continue
 
-            cls_t = cls_tokens[b].unsqueeze(0)  # [1, 512]
-            patches = patch_features[b]         # [196, 512]
-            combined_feat = torch.cat([cls_t, patches], dim=0).half().cpu()
+            imgs = imgs.to(device)
+            _, patch_features, cls_tokens = model(imgs)
 
-            torch.save(combined_feat, out_path)
-            count += 1
-        pbar.set_postfix(saved=count, skipped=skipped)
+            B = imgs.size(0)
+            for b in range(B):
+                did = dicom_ids[b]
+                if is_zip:
+                    fname = f"{did}.pt"
+                    if fname in existing:
+                        skipped += 1
+                        continue
+                    
+                    cls_t = cls_tokens[b].unsqueeze(0)  # [1, 512]
+                    patches = patch_features[b]         # [196, 512]
+                    combined_feat = torch.cat([cls_t, patches], dim=0).half().cpu()
+                    
+                    buf = io.BytesIO()
+                    torch.save(combined_feat, buf)
+                    zf.writestr(fname, buf.getvalue())
+                    existing.add(fname)
+                    count += 1
+                else:
+                    out_path = output_dir / f"{did}.pt"
+                    if out_path.exists():
+                        skipped += 1
+                        continue
 
+                    cls_t = cls_tokens[b].unsqueeze(0)  # [1, 512]
+                    patches = patch_features[b]         # [196, 512]
+                    combined_feat = torch.cat([cls_t, patches], dim=0).half().cpu()
+
+                    torch.save(combined_feat, out_path)
+                    count += 1
+            pbar.set_postfix(saved=count, skipped=skipped)
+    finally:
+        if zf is not None:
+            zf.close()
 
     print(f"[SUCCESS] Cached features for {count} studies to {output_dir}")
 

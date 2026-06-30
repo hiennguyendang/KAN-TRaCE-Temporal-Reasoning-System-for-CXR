@@ -55,20 +55,17 @@ def upload_chunk_dataset(chunk_dir: Path, part_idx: int, username: str) -> bool:
     try:
         res = subprocess.run(
             ["kaggle", "datasets", "create", "-p", str(chunk_dir)],
-            capture_output=True,
             text=True,
             check=False
         )
         if res.returncode == 0:
             print(f"[SUCCESS] Uploaded {dataset_id} successfully!")
-            print(res.stdout)
             return True
         else:
-            print(f"[WARNING] Kaggle dataset create output: {res.stdout}\n{res.stderr}")
+            print(f"[WARNING] Kaggle dataset create failed with return code {res.returncode}. Trying version update...")
             # Check if dataset already exists, try version update
             res_v = subprocess.run(
                 ["kaggle", "datasets", "version", "-p", str(chunk_dir), "-m", f"Auto update Part {part_idx}"],
-                capture_output=True,
                 text=True,
                 check=False
             )
@@ -76,7 +73,7 @@ def upload_chunk_dataset(chunk_dir: Path, part_idx: int, username: str) -> bool:
                 print(f"[SUCCESS] Updated version for {dataset_id} successfully!")
                 return True
             else:
-                print(f"[ERROR] Failed to upload chunk dataset: {res_v.stderr}")
+                print(f"[ERROR] Failed to upload chunk dataset (version update also failed, code {res_v.returncode})")
                 return False
     except Exception as e:
         print(f"[ERROR] Exception during kaggle upload: {e}")
@@ -136,15 +133,18 @@ def main() -> None:
         end_idx = min((chunk_idx + 1) * args.chunk_size, total_samples)
         
         chunk_dir = Path(f"/kaggle/working/biovilt_features_part{part_num}") if Path("/kaggle/input").exists() else Path(f"./data/biovilt_features_part{part_num}")
+        chunk_dir.mkdir(parents=True, exist_ok=True)
+        zip_path = chunk_dir / "features.zip"
+        
         print(f"\n==========================================")
-        print(f"Processing Chunk {part_num}/{num_chunks} (Indices {start_idx}..{end_idx}) -> {chunk_dir}")
+        print(f"Processing Chunk {part_num}/{num_chunks} (Indices {start_idx}..{end_idx}) -> {zip_path}")
         print(f"==========================================")
 
         subset = Subset(full_dataset, list(range(start_idx, end_idx)))
         loader = DataLoader(subset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
-        # 1. Extract features for this chunk
-        extract_and_cache_features(model, loader, chunk_dir, device)
+        # 1. Extract features for this chunk directly to a ZIP archive
+        extract_and_cache_features(model, loader, zip_path, device)
 
         # 2. Upload to Kaggle Datasets
         if Path("/kaggle/input").exists():
